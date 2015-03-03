@@ -4,7 +4,6 @@ var jshint = require('gulp-jshint');
 var istanbul = require('gulp-istanbul');
 var mocha = require('gulp-mocha');
 var coverageEnforcer = require('gulp-istanbul-enforcer');
-var runSequence = require('run-sequence');
 
 var globs = {
   js: {
@@ -108,9 +107,6 @@ gulp.task('watch', function () {
         gulp.watch(globs.js.Gulpfile, ['jshint']);
       }
     });
-});
-gulp.task('seq-test', function () {
-  runSequence('jshint', 'mocha-server-continue');
 });
 gulp.task('test', function () {
   return gulp.start('jshint-build',
