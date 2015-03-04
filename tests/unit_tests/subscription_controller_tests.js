@@ -232,28 +232,102 @@ describe('SubscriptionController', function () {
       });
     });
     describe('with meta', function () {
-      var _subscription;
-      var _subscriptionController;
-      before(function () {
-        _subscription = new Subscription({
-          _id: 'subscriptionId',
-          application: 'testAppId',
-          connector: 'connectorKey',
-          endpoints: ['/Contacts', '/Invoices'],
-          environment: 'test',
-          meta: {
-            key: 'value'
-          }
+      describe('with single key', function () {
+        var _subscription;
+        var _subscriptionController;
+        before(function () {
+          _subscription = new Subscription({
+            _id: 'subscriptionId',
+            application: 'testAppId',
+            connector: 'connectorKey',
+            endpoints: ['/Contacts', '/Invoices'],
+            environment: 'test',
+            meta: {
+              key: 'value'
+            }
+          });
+          _subscriptionController = new SubscriptionController(_subscription);
+          sinon.stub(_subscription, 'saveAsync').returns(BBPromise.resolve([_subscription]));
         });
-        _subscriptionController = new SubscriptionController(_subscription);
-        sinon.stub(_subscription, 'saveAsync').returns(BBPromise.resolve([_subscription]));
+        after(function () {
+          return _subscription.saveAsync.restore();
+        });
+        it('returns subscription', function () {
+          return _subscriptionController.delete('key').then(function (result) {
+            expect(result.meta).to.eql({});
+          });
+        });
       });
-      after(function () {
-        return _subscription.saveAsync.restore();
-      });
-      it('returns subscription', function () {
-        return _subscriptionController.delete('key').then(function (result) {
-          expect(result.meta).to.eql({});
+      describe('with array of keys', function () {
+        describe('with all existant keys', function () {
+          var _subscription;
+          var _subscriptionController;
+          before(function () {
+            _subscription = new Subscription({
+              _id: 'subscriptionId',
+              application: 'testAppId',
+              connector: 'connectorKey',
+              endpoints: ['/Contacts', '/Invoices'],
+              environment: 'test',
+              meta: {
+                key: {
+                  key2: {
+                    key3: 'value'
+                  }
+                }
+              }
+            });
+            _subscriptionController = new SubscriptionController(_subscription);
+            sinon.stub(_subscription, 'saveAsync').returns(BBPromise.resolve([_subscription]));
+          });
+          after(function () {
+            return _subscription.saveAsync.restore();
+          });
+          it('returns subscription', function () {
+            return _subscriptionController.delete(['key', 'key2', 'key3']).then(function (result) {
+              expect(result.meta).to.eql({
+                key: {
+                  key2: {}
+                }
+              });
+            });
+          });
+        });
+        describe('with non existant key', function () {
+          var _subscription;
+          var _subscriptionController;
+          before(function () {
+            _subscription = new Subscription({
+              _id: 'subscriptionId',
+              application: 'testAppId',
+              connector: 'connectorKey',
+              endpoints: ['/Contacts', '/Invoices'],
+              environment: 'test',
+              meta: {
+                key: {
+                  key2: {
+                    key3: 'value'
+                  }
+                }
+              }
+            });
+            _subscriptionController = new SubscriptionController(_subscription);
+            sinon.stub(_subscription, 'saveAsync').returns(BBPromise.resolve([_subscription]));
+          });
+          after(function () {
+            return _subscription.saveAsync.restore();
+          });
+          it('returns subscription', function () {
+            return _subscriptionController.delete(['key', 'key', 'key3']).then(function (result) {
+              expect(result.meta).to.eql({
+                key: {
+                  key2: {
+                    key3: 'value'
+                  }
+                }
+              });
+            });
+          });
         });
       });
     });
